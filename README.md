@@ -109,3 +109,36 @@ Una vez que el servidor esté corriendo, abre la URL provista (normalmente `http
 4. **Registrar Cosecha:** Inicializa un lote con un identificador único y el hash documental.
 5. **Registrar Temperatura:** Los eslabones autorizados reportan la temperatura y se apropian de la custodia del lote.
 6. **Auditar Lote:** Consulta de libre acceso que realiza una lectura directa a la blockchain por RPC público sin costo de gas ni firmas de transacción.
+
+---
+
+## 🧩 Módulos del Proyecto
+
+La interfaz (`index.html`) está organizada en 5 paneles (tabs), cada uno mapeado 1:1 a un rol del contrato. `app.js` expone una función por cada acción de esos paneles, agrupada por responsabilidad:
+
+| Módulo en `app.js` | Función(es) | Panel / Tab | Elemento(s) HTML asociados |
+| :--- | :--- | :--- | :--- |
+| **Ciclo de vida de wallet** | `conectarWallet()`, `desconectarWallet()`, `registrarListenersWallet()`, `asegurarRedSepolia()` | Header (global, visible en todos los tabs) | `#btnConnect`, `#btnDisconnect`, `#resWallet` |
+| **Admin** | `registrarNodo()` | Tab *Admin* | `#direccionNodo`, `#rolNodo`, `#btnRegistrarNodo`, `#resAlta` |
+| **Fundo — Staking** | `depositarGarantia()` | Tab *Fundo* | `#montoStaking`, `#btnDepositar`, `#resStaking` |
+| **Fundo — Cosecha** | `registrarCosecha()` | Tab *Fundo* | `#idLoteCosecha`, `#hashDocumento`, `#btnCosecha`, `#resCosecha` |
+| **Packing** | `transferirCustodia()` | Tab *Packing* | `#idLoteCustodia`, `#tempDatalogger`, `#btnCustodia`, `#resCustodia` |
+| **Operador Logístico** | `transferirCustodiaOperador()` | Tab *Logística* | `#idLoteOperador`, `#tempOperador`, `#btnOperador`, `#resOperador` |
+| **Comprador / Auditoría** | `consultarLote()` | Tab *Auditoría* | `#idLoteConsulta`, `#btnConsultar`, `#resConsulta` |
+| **Helpers compartidos** | `setStatus()`, `shortAddr()`, `conBotonDeshabilitado()`, `_timelineStep()` | — | usados internamente por los módulos anteriores |
+
+**Notas sobre el ciclo de vida de la wallet:**
+* `conectarWallet()` primero verifica la red (fuerza el cambio a Sepolia vía `wallet_switchEthereumChain` si es necesario) y solo entonces pide cuentas con `eth_requestAccounts`.
+* `registrarListenersWallet()` suscribe `accountsChanged` (reconecta o limpia el estado si el usuario cambia/quita cuentas desde la extensión) y `chainChanged` (recarga la página, patrón recomendado por MetaMask) para que la UI nunca quede desincronizada del estado real de la wallet.
+* `desconectarWallet()` limpia el estado local de la DApp (provider/signer/contrato) e intenta revocar el permiso con `wallet_revokePermissions` (EIP-2255); si la wallet no lo soporta, el logout local sigue siendo efectivo dentro de la DApp.
+* Cada botón de escritura (`btnRegistrarNodo`, `btnDepositar`, `btnCosecha`, `btnCustodia`, `btnOperador`, `btnConsultar`) se deshabilita mientras su transacción está pendiente (`conBotonDeshabilitado`), evitando envíos duplicados por doble clic.
+
+**Mapeo con el Smart Contract (`contract/popacket-engine.sol`):**
+
+| Función de `app.js` | Función del contrato | Requiere rol | Requiere staking |
+| :--- | :--- | :--- | :--- |
+| `registrarNodo()` | `registrarNodo(address,uint8)` | Admin (`soloAdmin`) | No |
+| `depositarGarantia()` | `depositarGarantia()` | Ninguno | No (es el propio depósito) |
+| `registrarCosecha()` | `registrarCosecha(string,string)` | Fundo (1) | Sí |
+| `transferirCustodia()` / `transferirCustodiaOperador()` | `transferirCustodia(string,int8,uint8)` | Packing (2) u Operador (3) | Sí |
+| `consultarLote()` | `consultarLote(string)` (view) | Ninguno | No |

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PoPacket Engine - Trazabilidad DApp</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        details { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        summary { font-weight: bold; cursor: pointer; }
+        button { margin-top: 10px; padding: 5px 15px; cursor: pointer; }
+        .res { color: blue; font-size: 0.9em; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>PoPacket Engine B2B</h1>
+    <p>Consorcio de trazabilidad para agroexportación (Arándanos y Palta Hass)</p>
+
+    <details open>
+        <summary>0. Conectar MetaMask (Todos los nodos de escritura)</summary>
+        <button onclick="conectarWallet()">Conectar Wallet</button>
+        <p class="res" id="resWallet">No conectado</p>
+    </details>
+
+    <details>
+        <summary>1. Administrador (PoPacket): Dar de alta un nodo</summary>
+        <input type="text" id="direccionNodo" placeholder="0x..." size="45">
+        <select id="rolNodo">
+            <option value="1">1 - Fundo</option>
+            <option value="2">2 - Packing</option>
+            <option value="3">3 - Operador Logístico</option>
+        </select>
+        <button onclick="registrarNodo()">Registrar Nodo</button>
+        <p class="res" id="resAlta"></p>
+    </details>
+
+    <details>
+        <summary>2. Nodos: Depositar PKT (Staking de Garantía)</summary>
+        <p>Deposita fondos para poder operar y garantizar el cumplimiento.</p>
+        <input type="number" id="montoStaking" placeholder="Monto ETH (Simulando PKT)" step="0.001">
+        <button onclick="depositarGarantia()">Bloquear Garantía</button>
+        <p class="res" id="resStaking"></p>
+    </details>
+
+    <details>
+        <summary>3. Fundo: Registrar Cosecha</summary>
+        <input type="text" id="idLoteCosecha" placeholder="Ej: L-2026-0417">
+        <input type="text" id="hashDocumento" placeholder="Hash AES-256 del acuerdo" size="45">
+        <button onclick="registrarCosecha()">Registrar Origen</button>
+        <p class="res" id="resCosecha"></p>
+    </details>
+
+    <details>
+        <summary>4. Packing / Operador: Transferir Custodia e IoT</summary>
+        <p>Ingresa la temperatura del datalogger (0°C a 4°C para Arándanos).</p>
+        <input type="text" id="idLoteCustodia" placeholder="Ej: L-2026-0417">
+        <input type="number" id="tempDatalogger" placeholder="Temperatura (°C)">
+        <select id="miRolAsignado">
+            <option value="2">Soy Packing</option>
+            <option value="3">Soy Operador Logístico</option>
+        </select>
+        <button onclick="transferirCustodia()">Registrar Temperatura</button>
+        <p class="res" id="resCustodia"></p>
+    </details>
+
+    <details>
+        <summary>5. Comprador Internacional: Verificar Lote (Solo Lectura)</summary>
+        <p>Consulta pública sin necesidad de MetaMask. Condición para pagar el lote.</p>
+        <input type="text" id="idLoteConsulta" placeholder="Ej: L-2026-0417">
+        <button onclick="consultarLote()">Auditar Lote</button>
+        <p class="res" id="resConsulta"></p>
+    </details>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.umd.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

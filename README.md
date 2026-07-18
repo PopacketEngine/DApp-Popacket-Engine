@@ -64,7 +64,9 @@ El proyecto mantiene una estructura simple e intuitiva:
 ```text
 ├── contract/
 │   └── popacket-engine.sol   # Código fuente del Smart Contract (Solidity)
-├── app.js                    # Lógica de conexión Web3, transacciones y consultas RPC
+├── assets/
+│   └── logo.svg              # Logo / favicon de la DApp
+├── app.js                    # Lógica de conexión Web3, transacciones, consultas RPC y acceso a la demo
 ├── index.html                # Interfaz de usuario de la DApp
 ├── .gitignore                # Archivos y carpetas a omitir en Git (ej. env)
 └── README.md                 # Documentación del proyecto (este archivo)
@@ -132,6 +134,21 @@ La interfaz (`index.html`) está organizada en 5 paneles (tabs), cada uno mapead
 * `registrarListenersWallet()` suscribe `accountsChanged` (reconecta o limpia el estado si el usuario cambia/quita cuentas desde la extensión) y `chainChanged` (recarga la página, patrón recomendado por MetaMask) para que la UI nunca quede desincronizada del estado real de la wallet.
 * `desconectarWallet()` limpia el estado local de la DApp (provider/signer/contrato) e intenta revocar el permiso con `wallet_revokePermissions` (EIP-2255); si la wallet no lo soporta, el logout local sigue siendo efectivo dentro de la DApp.
 * Cada botón de escritura (`btnRegistrarNodo`, `btnDepositar`, `btnCosecha`, `btnCustodia`, `btnOperador`, `btnConsultar`) se deshabilita mientras su transacción está pendiente (`conBotonDeshabilitado`), evitando envíos duplicados por doble clic.
+
+**Acceso a la demo (login):**
+
+La DApp pide usuario y contraseña antes de mostrar cualquier panel (`iniciarSesion()`, `cerrarSesion()`, `verificarSesion()` en `app.js`). Es un candado del lado del cliente pensado para no dejar la demo abierta a cualquiera que llegue a la URL — **no es un control de seguridad real**: las credenciales viven como texto plano en `app.js` y cualquiera puede leerlas o saltarse el login desde las herramientas de desarrollador del navegador. La autorización que sí importa es la que impone el propio contrato (`soloAdmin`, `requiereRol`, `requiereStaking`); ese login solo decide si el navegador te muestra la interfaz.
+
+> [!NOTE]
+> Para cambiar las credenciales, edita el objeto `CREDENCIALES_DEMO` al inicio de `app.js`.
+
+---
+
+## 🖼️ Logo y Favicon
+
+El logo vive en `assets/logo.svg` (un ícono de paquete sobre fondo azul) y se reutiliza en dos lugares: como favicon (`<link rel="icon">` en `index.html`) y como logo del header/login. Al ser un único SVG, cualquier cambio de marca solo requiere reemplazar ese archivo.
+
+---
 
 **Mapeo con el Smart Contract (`contract/popacket-engine.sol`):**
 

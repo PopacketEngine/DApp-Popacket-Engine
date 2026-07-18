@@ -26,6 +26,50 @@ let proveedor, firmante, contrato;
 let listenersListos = false;
 
 // ────────────────────────────────────────────────────────────
+// Acceso a la demo (gate del lado del cliente, credenciales fijas)
+// No sustituye seguridad real: cualquiera puede leer estas constantes
+// desde el codigo fuente. La autorizacion efectiva de cada accion la
+// valida el smart contract por rol (soloAdmin, requiereRol, requiereStaking).
+// ────────────────────────────────────────────────────────────
+
+const AUTH_KEY = "ppk-auth";
+const CREDENCIALES_DEMO = { usuario: "izpodev@popacket.com", clave: "tonacho123" };
+
+function verificarSesion() {
+    if (sessionStorage.getItem(AUTH_KEY) === "1") {
+        mostrarApp();
+    }
+}
+
+function iniciarSesion(event) {
+    event.preventDefault();
+    var usuario = document.getElementById("loginUsuario").value.trim().toLowerCase();
+    var clave = document.getElementById("loginClave").value;
+    var errorEl = document.getElementById("loginError");
+
+    if (usuario === CREDENCIALES_DEMO.usuario && clave === CREDENCIALES_DEMO.clave) {
+        sessionStorage.setItem(AUTH_KEY, "1");
+        if (errorEl) errorEl.textContent = "";
+        mostrarApp();
+    } else if (errorEl) {
+        errorEl.textContent = "Usuario o contraseña incorrectos.";
+    }
+}
+
+function cerrarSesion() {
+    sessionStorage.removeItem(AUTH_KEY);
+    window.location.reload();
+}
+
+function mostrarApp() {
+    var gate = document.getElementById("loginGate");
+    var root = document.getElementById("appRoot");
+    if (gate) gate.classList.add("hidden");
+    if (root) root.classList.remove("hidden");
+    if (typeof lucide !== "undefined") lucide.createIcons();
+}
+
+// ────────────────────────────────────────────────────────────
 // Helpers de UI
 // ────────────────────────────────────────────────────────────
 

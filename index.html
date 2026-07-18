@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PoPacket Engine | Trazabilidad Blockchain Agroexportadora</title>
     <meta name="description" content="Middleware de trazabilidad on-chain para agroexportacion de arandanos y palta Hass. Consorcio B2B con gobernanza descentralizada en Ethereum Sepolia.">
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -61,9 +62,48 @@
         .dark .res-output.error { color: #f87171; }
         .res-output.loading { color: #d97706; }
         .dark .res-output.loading { color: #fbbf24; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .panel.active { animation: fadeIn 0.18s ease; }
+
+        .card { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
+
+    <!-- ====================================================
+         LOGIN GATE
+         Nota: acceso de demo del lado del cliente (credenciales fijas).
+         No es un control de seguridad real -- la autorizacion efectiva
+         de cada accion la valida el smart contract por rol (soloAdmin,
+         requiereRol, requiereStaking).
+    ==================================================== -->
+    <div id="loginGate" class="min-h-screen flex items-center justify-center px-4">
+        <div class="w-full max-w-sm">
+            <div class="flex flex-col items-center mb-6">
+                <img src="assets/logo.svg" alt="PoPacket Engine" class="w-12 h-12 rounded-xl mb-3">
+                <h1 class="text-base font-semibold">PoPacket Engine <span class="text-slate-400 dark:text-slate-500 font-normal">B2B</span></h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Acceso a la demo del consorcio</p>
+            </div>
+            <form id="loginForm" onsubmit="iniciarSesion(event)" class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3">
+                <div>
+                    <label for="loginUsuario" class="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Usuario</label>
+                    <input type="text" id="loginUsuario" autocomplete="username" placeholder="usuario@popacket.com" class="input-field w-full rounded-lg px-3 py-2.5 text-sm">
+                </div>
+                <div>
+                    <label for="loginClave" class="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Contraseña</label>
+                    <input type="password" id="loginClave" autocomplete="current-password" class="input-field w-full rounded-lg px-3 py-2.5 text-sm">
+                </div>
+                <p class="res-output error" id="loginError"></p>
+                <button type="submit" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white">Ingresar</button>
+            </form>
+            <p class="text-[11px] text-slate-400 dark:text-slate-600 text-center mt-4">
+                La autorización real de cada acción se valida on-chain por rol, no por este acceso.
+            </p>
+        </div>
+    </div>
+
+    <div id="appRoot" class="hidden">
 
     <!-- ====================================================
          HEADER
@@ -73,9 +113,7 @@
             <div class="flex items-center justify-between h-16 gap-4">
 
                 <a href="#" class="flex items-center gap-2.5 flex-shrink-0" aria-label="PoPacket Engine">
-                    <div class="w-8 h-8 rounded-lg bg-slate-900 dark:bg-white flex items-center justify-center flex-shrink-0">
-                        <i data-lucide="package-2" class="text-white dark:text-slate-900" style="width:16px;height:16px;" aria-hidden="true"></i>
-                    </div>
+                    <img src="assets/logo.svg" alt="" class="w-8 h-8 rounded-lg flex-shrink-0" aria-hidden="true">
                     <span class="font-semibold text-sm">PoPacket Engine <span class="text-slate-400 dark:text-slate-500 font-normal">B2B</span></span>
                 </a>
 
@@ -146,7 +184,7 @@
              PANEL 1 — ADMIN
         ==================================================== -->
         <section id="panelAdmin" class="panel active" role="tabpanel" aria-labelledby="tab-Admin">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6">
+            <div class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6">
 
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -175,8 +213,8 @@
                                     <option value="3">3 — Operador logistico</option>
                                 </select>
                             </div>
-                            <button onclick="registrarNodo()" id="btnRegistrarNodo" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white">
-                                Registrar nodo
+                            <button onclick="registrarNodo()" id="btnRegistrarNodo" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white flex items-center justify-center gap-2">
+                                <i data-lucide="user-plus" style="width:14px;height:14px;" aria-hidden="true"></i> Registrar nodo
                             </button>
                             <p class="res-output" id="resAlta"></p>
                         </div>
@@ -216,7 +254,7 @@
              PANEL 2 — FUNDO
         ==================================================== -->
         <section id="panelFundo" class="panel" role="tabpanel" aria-labelledby="tab-Fundo">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6">
+            <div class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6">
 
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -238,8 +276,8 @@
                                 <label for="montoStaking" class="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Monto en ETH a bloquear</label>
                                 <input type="number" id="montoStaking" placeholder="0.001" step="0.001" min="0" class="input-field w-full rounded-lg px-3 py-2.5 text-sm">
                             </div>
-                            <button onclick="depositarGarantia()" id="btnDepositar" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white">
-                                Bloquear garantia
+                            <button onclick="depositarGarantia()" id="btnDepositar" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white flex items-center justify-center gap-2">
+                                <i data-lucide="lock" style="width:14px;height:14px;" aria-hidden="true"></i> Bloquear garantia
                             </button>
                             <p class="res-output" id="resStaking"></p>
                         </div>
@@ -257,8 +295,8 @@
                                 <label for="hashDocumento" class="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Hash SHA-256 del acuerdo comercial</label>
                                 <input type="text" id="hashDocumento" placeholder="0xabc123..." class="input-field w-full rounded-lg px-3 py-2.5 text-sm font-mono">
                             </div>
-                            <button onclick="registrarCosecha()" id="btnCosecha" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white">
-                                Registrar origen
+                            <button onclick="registrarCosecha()" id="btnCosecha" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white flex items-center justify-center gap-2">
+                                <i data-lucide="sprout" style="width:14px;height:14px;" aria-hidden="true"></i> Registrar origen
                             </button>
                             <p class="res-output" id="resCosecha"></p>
                         </div>
@@ -271,7 +309,7 @@
              PANEL 3 — PACKING
         ==================================================== -->
         <section id="panelPacking" class="panel" role="tabpanel" aria-labelledby="tab-Packing">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6">
+            <div class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6">
 
                 <div class="flex items-center gap-3 mb-5">
                     <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -306,8 +344,8 @@
                             </div>
                             <input type="hidden" id="miRolAsignado" value="2">
                             <p class="text-xs text-slate-400 dark:text-slate-500">Rol: Packing (2)</p>
-                            <button onclick="transferirCustodia()" id="btnCustodia" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white">
-                                Registrar temperatura
+                            <button onclick="transferirCustodia()" id="btnCustodia" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white flex items-center justify-center gap-2">
+                                <i data-lucide="thermometer" style="width:14px;height:14px;" aria-hidden="true"></i> Registrar temperatura
                             </button>
                             <p class="res-output" id="resCustodia"></p>
                         </div>
@@ -338,7 +376,7 @@
              PANEL 4 — OPERADOR LOGISTICO
         ==================================================== -->
         <section id="panelOperador" class="panel" role="tabpanel" aria-labelledby="tab-Operador">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6">
+            <div class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6">
 
                 <div class="flex items-center gap-3 mb-5">
                     <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -373,8 +411,8 @@
                             </div>
                             <input type="hidden" id="rolOperadorHidden" value="3">
                             <p class="text-xs text-slate-400 dark:text-slate-500">Rol: Operador logistico (3)</p>
-                            <button onclick="transferirCustodiaOperador()" id="btnOperador" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white">
-                                Validar entrega
+                            <button onclick="transferirCustodiaOperador()" id="btnOperador" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white flex items-center justify-center gap-2">
+                                <i data-lucide="truck" style="width:14px;height:14px;" aria-hidden="true"></i> Validar entrega
                             </button>
                             <p class="res-output" id="resOperador"></p>
                         </div>
@@ -412,7 +450,7 @@
              PANEL 5 — AUDITORIA PUBLICA (COMPRADOR)
         ==================================================== -->
         <section id="panelComprador" class="panel" role="tabpanel" aria-labelledby="tab-Comprador">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6">
+            <div class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6">
 
                 <div class="flex items-center gap-3 mb-5">
                     <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -426,8 +464,8 @@
 
                 <div class="flex flex-col sm:flex-row gap-2.5 mb-4">
                     <input type="text" id="idLoteConsulta" placeholder="Ingresa el ID del lote (Ej: L-2026-0417)" class="input-field flex-1 rounded-lg px-3.5 py-2.5 text-sm">
-                    <button onclick="consultarLote()" id="btnConsultar" class="btn-primary px-6 py-2.5 rounded-lg text-sm font-medium text-white whitespace-nowrap">
-                        Auditar lote
+                    <button onclick="consultarLote()" id="btnConsultar" class="btn-primary px-6 py-2.5 rounded-lg text-sm font-medium text-white whitespace-nowrap flex items-center justify-center gap-2">
+                        <i data-lucide="search" style="width:14px;height:14px;" aria-hidden="true"></i> Auditar lote
                     </button>
                 </div>
 
@@ -449,13 +487,18 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6 py-5">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
                 <span>PoPacket Engine B2B — Trazabilidad on-chain agroexportadora</span>
-                <a href="https://sepolia.etherscan.io/address/0xDAcB6b9899eEe47e3A7F83C9CeE1f87D4de60487"
-                   target="_blank" rel="noopener noreferrer" class="font-mono hover:text-slate-700 dark:hover:text-slate-200">
-                    0xDAcB…0487
-                </a>
+                <div class="flex items-center gap-4">
+                    <a href="https://sepolia.etherscan.io/address/0xDAcB6b9899eEe47e3A7F83C9CeE1f87D4de60487"
+                       target="_blank" rel="noopener noreferrer" class="font-mono hover:text-slate-700 dark:hover:text-slate-200">
+                        0xDAcB…0487
+                    </a>
+                    <button onclick="cerrarSesion()" class="hover:text-slate-700 dark:hover:text-slate-200">Cerrar sesión</button>
+                </div>
             </div>
         </div>
     </footer>
+
+    </div><!-- /#appRoot -->
 
     <!-- ====================================================
          SCRIPTS
@@ -489,6 +532,7 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof lucide !== 'undefined') lucide.createIcons();
+            if (typeof verificarSesion === 'function') verificarSesion();
         });
     </script>
 

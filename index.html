@@ -1,77 +1,942 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
-    <title>PoPacket Engine - Trazabilidad DApp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoPacket Engine | Trazabilidad Blockchain Agroexportadora</title>
+    <meta name="description" content="Middleware de trazabilidad on-chain para agroexportacion de arandanos y palta Hass. Consorcio B2B con gobernanza descentralizada en Ethereum Sepolia.">
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons via CDN -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <script>
+        // Must be BEFORE tailwind.css to configure dark mode strategy
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <!-- Theme init: apply saved preference before paint to avoid flash -->
+    <script>
+        (function() {
+            var saved = localStorage.getItem('ppk-theme');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        details { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        summary { font-weight: bold; cursor: pointer; }
-        button { margin-top: 10px; padding: 5px 15px; cursor: pointer; }
-        .res { color: blue; font-size: 0.9em; margin-top: 10px; }
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+
+        /* ── Body transition for theme switch ── */
+        body { transition: background-color 0.25s ease, color 0.25s ease; }
+
+        /* ── Glass morphism — DARK mode (default) ── */
+        .glass {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: background 0.25s ease, border-color 0.25s ease;
+        }
+        .glass-deep {
+            background: rgba(255,255,255,0.025);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: background 0.25s ease, border-color 0.25s ease;
+        }
+        /* ── Glass — LIGHT mode overrides ── */
+        html:not(.dark) .glass {
+            background: rgba(255,255,255,0.80);
+            border: 1px solid rgba(0,0,0,0.08);
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+        html:not(.dark) .glass-deep {
+            background: rgba(248,250,252,0.90);
+            border: 1px solid rgba(0,0,0,0.07);
+            box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+        }
+
+        /* ── Gradient utilities ── */
+        .gradient-text {
+            background: linear-gradient(135deg, #34d399 0%, #22d3ee 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .gradient-text-amber {
+            background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #059669, #0891b2);
+        }
+
+        /* ── Buttons ── */
+        .btn-primary {
+            background: linear-gradient(135deg, #059669, #0891b2);
+            transition: all 0.2s cubic-bezier(.4,0,.2,1);
+            box-shadow: 0 4px 14px rgba(52,211,153,0.15);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(52,211,153,0.25); opacity: 0.93; }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-amber {
+            background: linear-gradient(135deg, #b45309, #d97706);
+            transition: all 0.2s cubic-bezier(.4,0,.2,1);
+            box-shadow: 0 4px 14px rgba(245,158,11,0.15);
+        }
+        .btn-amber:hover { transform: translateY(-1px); opacity: 0.92; }
+
+        .btn-purple {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            transition: all 0.2s cubic-bezier(.4,0,.2,1);
+            box-shadow: 0 4px 14px rgba(139,92,246,0.15);
+        }
+        .btn-purple:hover { transform: translateY(-1px); opacity: 0.92; }
+
+        /* ── Theme toggle button ── */
+        .btn-theme {
+            transition: all 0.2s cubic-bezier(.4,0,.2,1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+        .dark .btn-theme {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #94a3b8;
+        }
+        .dark .btn-theme:hover { background: rgba(255,255,255,0.1); color: #fbbf24; }
+        html:not(.dark) .btn-theme {
+            background: rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.1);
+            color: #475569;
+        }
+        html:not(.dark) .btn-theme:hover { background: rgba(0,0,0,0.1); color: #f59e0b; }
+
+        /* ── Input fields — dark default ── */
+        .input-field {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(52,211,153,0.5);
+            background: rgba(52,211,153,0.04);
+            box-shadow: 0 0 0 3px rgba(52,211,153,0.1);
+        }
+        .input-field::placeholder { color: rgba(148,163,184,0.45); }
+        .input-field option { background: #0f172a; color: #e2e8f0; }
+        /* ── Input fields — light mode ── */
+        html:not(.dark) .input-field {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+        }
+        html:not(.dark) .input-field::placeholder { color: #94a3b8; }
+        html:not(.dark) .input-field option { background: #ffffff; color: #0f172a; }
+
+        /* ── Tab system ── */
+        .tab-btn {
+            transition: all 0.2s cubic-bezier(.4,0,.2,1);
+            border: 1px solid transparent;
+        }
+        .dark .tab-btn { color: #64748b; }
+        .dark .tab-btn:hover { color: #94a3b8; }
+        html:not(.dark) .tab-btn { color: #64748b; }
+        html:not(.dark) .tab-btn:hover { color: #334155; }
+        .tab-active {
+            background: linear-gradient(135deg, rgba(52,211,153,0.12), rgba(34,211,238,0.12));
+            border-color: rgba(52,211,153,0.35);
+            color: #059669 !important;
+            box-shadow: 0 2px 12px rgba(52,211,153,0.1);
+        }
+        .dark .tab-active { color: #34d399 !important; }
+
+        /* ── Panels ── */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeSlideIn 0.28s cubic-bezier(.4,0,.2,1) forwards; }
+
+        /* ── Pulsing dot ── */
+        @keyframes pulseGlow {
+            0%,100% { box-shadow: 0 0 4px rgba(52,211,153,0.4); }
+            50%      { box-shadow: 0 0 12px rgba(52,211,153,0.9), 0 0 20px rgba(52,211,153,0.4); }
+        }
+        .pulse-dot { animation: pulseGlow 2.2s ease-in-out infinite; }
+
+        /* ── Status feedback ── */
+        .res-output {
+            font-size: 0.72rem;
+            min-height: 1.5rem;
+            line-height: 1.5;
+            color: #94a3b8;
+            transition: all 0.2s ease;
+            word-break: break-all;
+        }
+        .res-output.success { color: #059669; }
+        .res-output.error   { color: #ef4444; }
+        .res-output.loading { color: #d97706; }
+        .dark .res-output { color: #64748b; }
+        .dark .res-output.success { color: #34d399; }
+        .dark .res-output.error   { color: #f87171; }
+        .dark .res-output.loading { color: #facc15; }
+
+        /* ── Alerts ── */
+        .alert-slashing {
+            background: rgba(245,158,11,0.07);
+            border: 1px solid rgba(245,158,11,0.25);
+        }
+        html:not(.dark) .alert-slashing {
+            background: rgba(245,158,11,0.06);
+            border: 1px solid rgba(217,119,6,0.25);
+        }
+
+        /* ── Stat cards ── */
+        .stat-card {
+            background: linear-gradient(135deg, rgba(52,211,153,0.04), rgba(34,211,238,0.04));
+            border: 1px solid rgba(52,211,153,0.12);
+            transition: all 0.2s ease;
+        }
+        html:not(.dark) .stat-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .stat-card:hover { border-color: rgba(52,211,153,0.25); transform: translateY(-1px); }
+        html:not(.dark) .stat-card:hover { border-color: #34d399; }
+
+        /* ── Timeline ── */
+        .timeline-connector {
+            background: linear-gradient(to bottom, #34d399, #22d3ee, #8b5cf6, #475569);
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 5px; }
+        .dark ::-webkit-scrollbar-track { background: #020617; }
+        .dark ::-webkit-scrollbar-thumb { background: rgba(52,211,153,0.25); border-radius: 3px; }
+        html:not(.dark) ::-webkit-scrollbar-track { background: #f1f5f9; }
+        html:not(.dark) ::-webkit-scrollbar-thumb { background: rgba(52,211,153,0.4); border-radius: 3px; }
+
+        /* ── Decorative blobs ── */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        html:not(.dark) .blob { opacity: 0.4; }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen relative">
 
-    <h1>PoPacket Engine B2B</h1>
-    <p>Consorcio de trazabilidad para agroexportación (Arándanos y Palta Hass)</p>
+    <!-- Decorative background blobs -->
+    <div class="blob w-[600px] h-[600px] top-[-200px] left-[-100px] bg-emerald-500/[0.04]"></div>
+    <div class="blob w-[500px] h-[500px] bottom-[-100px] right-[-150px] bg-cyan-500/[0.04]"></div>
+    <div class="blob w-[400px] h-[400px] top-[40%] left-[55%] bg-violet-500/[0.03]"></div>
 
-    <details open>
-        <summary>0. Conectar MetaMask (Todos los nodos de escritura)</summary>
-        <button onclick="conectarWallet()">Conectar Wallet</button>
-        <p class="res" id="resWallet">No conectado</p>
-    </details>
+    <!-- ====================================================
+         HEADER / NAVBAR
+    ==================================================== -->
+    <header class="sticky top-0 z-50 glass border-b border-slate-200 dark:border-white/[0.07]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
 
-    <details>
-        <summary>1. Administrador (PoPacket): Dar de alta un nodo</summary>
-        <input type="text" id="direccionNodo" placeholder="0x..." size="45">
-        <select id="rolNodo">
-            <option value="1">1 - Fundo</option>
-            <option value="2">2 - Packing</option>
-            <option value="3">3 - Operador Logístico</option>
-        </select>
-        <button onclick="registrarNodo()">Registrar Nodo</button>
-        <p class="res" id="resAlta"></p>
-    </details>
+                <!-- Logo -->
+                <a href="#" class="flex items-center gap-3 flex-shrink-0" aria-label="PoPacket Engine Home">
+                    <div class="w-9 h-9 rounded-xl gradient-bg flex items-center justify-center flex-shrink-0 pulse-dot">
+                        <i data-lucide="package-2" class="text-white" style="width:18px;height:18px;stroke-width:2;"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-bold text-base gradient-text tracking-tight">PoPacket Engine</span>
+                        <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-100 dark:bg-white/5 rounded px-1.5 py-0.5">B2B</span>
+                    </div>
+                </a>
 
-    <details>
-        <summary>2. Nodos: Depositar PKT (Staking de Garantía)</summary>
-        <p>Deposita fondos para poder operar y garantizar el cumplimiento.</p>
-        <input type="number" id="montoStaking" placeholder="Monto ETH (Simulando PKT)" step="0.001">
-        <button onclick="depositarGarantia()">Bloquear Garantía</button>
-        <p class="res" id="resStaking"></p>
-    </details>
+                <!-- Network badge -->
+                <div class="hidden sm:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1.5">
+                    <div class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot flex-shrink-0"></div>
+                    <span class="text-emerald-600 dark:text-emerald-400 text-xs font-medium">Sepolia Testnet</span>
+                    <span class="text-slate-400 dark:text-slate-600 text-xs">&middot;</span>
+                    <span class="text-slate-500 text-xs">Ethereum</span>
+                </div>
 
-    <details>
-        <summary>3. Fundo: Registrar Cosecha</summary>
-        <input type="text" id="idLoteCosecha" placeholder="Ej: L-2026-0417">
-        <input type="text" id="hashDocumento" placeholder="Hash AES-256 del acuerdo" size="45">
-        <button onclick="registrarCosecha()">Registrar Origen</button>
-        <p class="res" id="resCosecha"></p>
-    </details>
+                <!-- Wallet status + theme toggle + connect button -->
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <p class="text-xs text-slate-500 hidden lg:block truncate max-w-[200px]" id="resWallet">No conectado</p>
 
-    <details>
-        <summary>4. Packing / Operador: Transferir Custodia e IoT</summary>
-        <p>Ingresa la temperatura del datalogger (0°C a 4°C para Arándanos).</p>
-        <input type="text" id="idLoteCustodia" placeholder="Ej: L-2026-0417">
-        <input type="number" id="tempDatalogger" placeholder="Temperatura (°C)">
-        <select id="miRolAsignado">
-            <option value="2">Soy Packing</option>
-            <option value="3">Soy Operador Logístico</option>
-        </select>
-        <button onclick="transferirCustodia()">Registrar Temperatura</button>
-        <p class="res" id="resCustodia"></p>
-    </details>
+                    <!-- Theme toggle -->
+                    <button
+                        id="btnTheme"
+                        onclick="toggleTheme()"
+                        class="btn-theme"
+                        aria-label="Cambiar tema"
+                        title="Cambiar tema claro / oscuro"
+                    >
+                        <!-- Sun icon (shown in dark mode to switch to light) -->
+                        <i data-lucide="sun" id="iconSun" style="width:16px;height:16px;" class="hidden dark:block"></i>
+                        <!-- Moon icon (shown in light mode to switch to dark) -->
+                        <i data-lucide="moon" id="iconMoon" style="width:16px;height:16px;" class="block dark:hidden"></i>
+                    </button>
 
-    <details>
-        <summary>5. Comprador Internacional: Verificar Lote (Solo Lectura)</summary>
-        <p>Consulta pública sin necesidad de MetaMask. Condición para pagar el lote.</p>
-        <input type="text" id="idLoteConsulta" placeholder="Ej: L-2026-0417">
-        <button onclick="consultarLote()">Auditar Lote</button>
-        <p class="res" id="resConsulta"></p>
-    </details>
+                    <button
+                        id="btnConnect"
+                        onclick="conectarWallet()"
+                        class="btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                        aria-label="Conectar MetaMask"
+                    >
+                        <i data-lucide="wallet" style="width:15px;height:15px;"></i>
+                        <span class="hidden sm:inline">Conectar MetaMask</span>
+                        <span class="sm:hidden">Conectar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
 
+    <!-- ====================================================
+         MAIN CONTENT
+    ==================================================== -->
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+        <!-- Hero -->
+        <section class="text-center mb-10" aria-labelledby="hero-heading">
+            <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs text-cyan-600 dark:text-cyan-400 mb-5 border border-cyan-500/20">
+                <i data-lucide="shield-check" style="width:12px;height:12px;"></i>
+                <span>Trazabilidad Inmutable &middot; Smart Contract Verificado en Sepolia</span>
+            </div>
+            <h1 id="hero-heading" class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+                <span class="gradient-text">Cadena de Custodia</span><br>
+                <span class="text-slate-900 dark:text-white">Descentralizada</span>
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+                Consorcio B2B de trazabilidad para agroexportacion de
+                <strong class="text-emerald-600 dark:text-emerald-400 font-medium">arandanos</strong> y
+                <strong class="text-cyan-600 dark:text-cyan-400 font-medium">palta Hass</strong>.
+                Gobernanza on-chain con slashing automatico por ruptura de cadena de frio.
+            </p>
+        </section>
+
+        <!-- Stats Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+            <div class="stat-card rounded-2xl p-4 text-center">
+                <p class="text-2xl font-bold gradient-text">0&ndash;4&deg;C</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Rango Termico Optimo</p>
+            </div>
+            <div class="stat-card rounded-2xl p-4 text-center">
+                <p class="text-2xl font-bold gradient-text-amber">10%</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Slashing por Anomalia</p>
+            </div>
+            <div class="stat-card rounded-2xl p-4 text-center">
+                <p class="text-2xl font-bold text-cyan-500 dark:text-cyan-400">3</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Roles de Consorcio</p>
+            </div>
+            <div class="stat-card rounded-2xl p-4 text-center">
+                <p class="text-2xl font-bold text-emerald-500 dark:text-emerald-400">&infin;</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Registros Inmutables</p>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             TAB NAVIGATION
+        ==================================================== -->
+        <nav class="glass border border-slate-200 dark:border-transparent rounded-2xl p-1.5 mb-6 flex gap-1 overflow-x-auto" aria-label="Paneles de flujo" role="tablist">
+            <button onclick="switchTab('Admin')" id="tab-Admin" role="tab" aria-selected="true" aria-controls="panelAdmin"
+                class="tab-btn tab-active flex-1 min-w-max flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium">
+                <i data-lucide="shield" style="width:14px;height:14px;"></i>
+                <span>Admin</span>
+            </button>
+            <button onclick="switchTab('Fundo')" id="tab-Fundo" role="tab" aria-selected="false" aria-controls="panelFundo"
+                class="tab-btn flex-1 min-w-max flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium">
+                <i data-lucide="sprout" style="width:14px;height:14px;"></i>
+                <span>Fundo</span>
+            </button>
+            <button onclick="switchTab('Packing')" id="tab-Packing" role="tab" aria-selected="false" aria-controls="panelPacking"
+                class="tab-btn flex-1 min-w-max flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium">
+                <i data-lucide="package" style="width:14px;height:14px;"></i>
+                <span>Packing</span>
+            </button>
+            <button onclick="switchTab('Operador')" id="tab-Operador" role="tab" aria-selected="false" aria-controls="panelOperador"
+                class="tab-btn flex-1 min-w-max flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium">
+                <i data-lucide="truck" style="width:14px;height:14px;"></i>
+                <span>Logistica</span>
+            </button>
+            <button onclick="switchTab('Comprador')" id="tab-Comprador" role="tab" aria-selected="false" aria-controls="panelComprador"
+                class="tab-btn flex-1 min-w-max flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium">
+                <i data-lucide="search" style="width:14px;height:14px;"></i>
+                <span>Auditoria</span>
+            </button>
+        </nav>
+
+        <!-- ====================================================
+             PANEL 1 — ADMIN
+        ==================================================== -->
+        <section id="panelAdmin" class="panel active fade-in" role="tabpanel" aria-labelledby="tab-Admin">
+            <div class="glass rounded-2xl p-6 sm:p-8">
+
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                        <i data-lucide="shield" class="text-emerald-400" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Panel de Administracion</h2>
+                        <p class="text-xs text-slate-500">Acceso exclusivo para PoPacket Engine &middot; Propietario del contrato</p>
+                    </div>
+                    <div class="ml-auto hidden sm:flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1">
+                        <i data-lucide="key" class="text-emerald-400" style="width:10px;height:10px;"></i>
+                        <span class="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">Solo Admin</span>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+
+                    <!-- Register node form -->
+                    <div class="glass-deep rounded-2xl p-5 border border-emerald-500/10">
+                        <h3 class="text-sm font-semibold text-emerald-400 mb-5 flex items-center gap-2">
+                            <i data-lucide="user-plus" style="width:14px;height:14px;"></i>
+                            Dar de Alta Nuevo Nodo
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="direccionNodo" class="block text-xs text-slate-400 mb-2 font-medium">Direccion del Nodo (Wallet)</label>
+                                <input type="text" id="direccionNodo" placeholder="0x..." autocomplete="off"
+                                    class="input-field w-full rounded-xl px-4 py-3 text-sm font-mono">
+                            </div>
+                            <div>
+                                <label for="rolNodo" class="block text-xs text-slate-400 mb-2 font-medium">Rol a Asignar</label>
+                                <select id="rolNodo" class="input-field w-full rounded-xl px-4 py-3 text-sm cursor-pointer">
+                                    <option value="1">&#x1F33F; Rol 1 — Fundo (Productor Agricola)</option>
+                                    <option value="2">&#x1F4E6; Rol 2 — Packing (Planta de Empaque)</option>
+                                    <option value="3">&#x1F69B; Rol 3 — Operador Logistico</option>
+                                </select>
+                            </div>
+                            <button onclick="registrarNodo()" id="btnRegistrarNodo"
+                                class="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2">
+                                <i data-lucide="plus-circle" style="width:15px;height:15px;"></i>
+                                Registrar Nodo en Blockchain
+                            </button>
+                            <p class="res-output" id="resAlta"></p>
+                        </div>
+                    </div>
+
+                    <!-- Roles reference -->
+                    <div class="glass-deep rounded-2xl p-5 border border-cyan-500/10">
+                        <h3 class="text-sm font-semibold text-cyan-400 mb-5 flex items-center gap-2">
+                            <i data-lucide="network" style="width:14px;height:14px;"></i>
+                            Arquitectura de Roles del Consorcio
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-emerald-500/20 transition-colors">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="sprout" class="text-emerald-400" style="width:14px;height:14px;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-white mb-0.5">Fundo &mdash; Rol 1</p>
+                                    <p class="text-xs text-slate-500 leading-relaxed">Origen del lote. Registra la cosecha (Asset Genesis) y ancla el hash del acuerdo comercial.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-cyan-500/20 transition-colors">
+                                <div class="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="package" class="text-cyan-400" style="width:14px;height:14px;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-white mb-0.5">Packing &mdash; Rol 2</p>
+                                    <p class="text-xs text-slate-500 leading-relaxed">Planta de empaque. Valida cadena de frio reportando temperatura del datalogger.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-purple-500/20 transition-colors">
+                                <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="truck" class="text-purple-400" style="width:14px;height:14px;"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-white mb-0.5">Operador Logistico &mdash; Rol 3</p>
+                                    <p class="text-xs text-slate-500 leading-relaxed">Transporte refrigerado y entrega en puerto. Valida temperatura hasta el destino final.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================
+             PANEL 2 — FUNDO
+        ==================================================== -->
+        <section id="panelFundo" class="panel fade-in" role="tabpanel" aria-labelledby="tab-Fundo">
+            <div class="glass rounded-2xl p-6 sm:p-8">
+
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                        <i data-lucide="sprout" class="text-emerald-400" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Panel del Fundo</h2>
+                        <p class="text-xs text-slate-500">Productor Agricola &middot; Rol 1 &middot; Origen del lote de exportacion</p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+
+                    <!-- Staking -->
+                    <div class="glass-deep rounded-2xl p-5 border border-amber-500/10">
+                        <h3 class="text-sm font-semibold text-amber-400 mb-1 flex items-center gap-2">
+                            <i data-lucide="lock" style="width:14px;height:14px;"></i>
+                            Depositar Garantia Operativa
+                        </h3>
+                        <p class="text-xs text-slate-500 mb-5 leading-relaxed">Bloquea ETH (simulando tokens PKT) para habilitar tu nodo y poder registrar lotes.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="montoStaking" class="block text-xs text-slate-400 mb-2 font-medium">Monto en ETH a Bloquear</label>
+                                <div class="relative">
+                                    <input type="number" id="montoStaking" placeholder="0.001" step="0.001" min="0"
+                                        class="input-field w-full rounded-xl px-4 py-3 text-sm pr-14">
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium">ETH</span>
+                                </div>
+                            </div>
+                            <button onclick="depositarGarantia()" id="btnDepositar"
+                                class="btn-amber w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2">
+                                <i data-lucide="shield-check" style="width:15px;height:15px;"></i>
+                                Bloquear Garantia PKT
+                            </button>
+                            <p class="res-output" id="resStaking"></p>
+                        </div>
+                    </div>
+
+                    <!-- Register harvest -->
+                    <div class="glass-deep rounded-2xl p-5 border border-emerald-500/10">
+                        <h3 class="text-sm font-semibold text-emerald-400 mb-1 flex items-center gap-2">
+                            <i data-lucide="leaf" style="width:14px;height:14px;"></i>
+                            Registrar Cosecha &mdash; Asset Genesis
+                        </h3>
+                        <p class="text-xs text-slate-500 mb-5 leading-relaxed">Crea el lote en la blockchain. Requiere staking bloqueado previamente.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="idLoteCosecha" class="block text-xs text-slate-400 mb-2 font-medium">ID del Lote</label>
+                                <input type="text" id="idLoteCosecha" placeholder="Ej: L-2026-0417"
+                                    class="input-field w-full rounded-xl px-4 py-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="hashDocumento" class="block text-xs text-slate-400 mb-2 font-medium">Hash del Acuerdo Comercial (AES-256)</label>
+                                <input type="text" id="hashDocumento" placeholder="0xabc123..."
+                                    class="input-field w-full rounded-xl px-4 py-3 text-sm font-mono">
+                            </div>
+                            <button onclick="registrarCosecha()" id="btnCosecha"
+                                class="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2">
+                                <i data-lucide="git-commit-horizontal" style="width:15px;height:15px;"></i>
+                                Registrar Origen en Blockchain
+                            </button>
+                            <p class="res-output" id="resCosecha"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================
+             PANEL 3 — PACKING
+        ==================================================== -->
+        <section id="panelPacking" class="panel fade-in" role="tabpanel" aria-labelledby="tab-Packing">
+            <div class="glass rounded-2xl p-6 sm:p-8">
+
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                        <i data-lucide="package" class="text-cyan-400" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Panel de Packing</h2>
+                        <p class="text-xs text-slate-500">Planta de Empaque &middot; Rol 2 &middot; Validacion de cadena de frio</p>
+                    </div>
+                </div>
+
+                <!-- Slashing governance alert -->
+                <div class="alert-slashing rounded-2xl p-4 sm:p-5 mb-6 flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i data-lucide="alert-triangle" class="text-amber-400" style="width:18px;height:18px;"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-amber-400 mb-2">&#x26A0;&#xFE0F; Alerta de Gobernanza: Mecanismo de Slashing Activo</p>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                            Si la temperatura reportada esta <strong class="text-amber-300">fuera del rango permitido (0&deg;C &ndash; 4&deg;C)</strong>,
+                            el contrato inteligente ejecutara automaticamente y de forma irreversible:
+                        </p>
+                        <div class="grid sm:grid-cols-2 gap-2">
+                            <div class="flex items-center gap-2 bg-red-500/8 border border-red-500/15 rounded-lg p-2.5">
+                                <i data-lucide="x-circle" class="text-red-400 flex-shrink-0" style="width:13px;height:13px;"></i>
+                                <span class="text-xs text-slate-300">Estado del lote &rarr; <strong class="text-red-400">Rechazado (Cadena Rota)</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2 bg-amber-500/8 border border-amber-500/15 rounded-lg p-2.5">
+                                <i data-lucide="coins" class="text-amber-400 flex-shrink-0" style="width:13px;height:13px;"></i>
+                                <span class="text-xs text-slate-300">Confiscacion de <strong class="text-amber-400">10% del staking</strong> bloqueado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+
+                    <!-- Transfer custody -->
+                    <div class="glass-deep rounded-2xl p-5 border border-cyan-500/10">
+                        <h3 class="text-sm font-semibold text-cyan-400 mb-5 flex items-center gap-2">
+                            <i data-lucide="thermometer" style="width:14px;height:14px;"></i>
+                            Transferir Custodia + Validar Temperatura
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="idLoteCustodia" class="block text-xs text-slate-400 mb-2 font-medium">ID del Lote</label>
+                                <input type="text" id="idLoteCustodia" placeholder="Ej: L-2026-0417"
+                                    class="input-field w-full rounded-xl px-4 py-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="tempDatalogger" class="block text-xs text-slate-400 mb-2 font-medium">Temperatura Datalogger (&deg;C)</label>
+                                <div class="relative">
+                                    <input type="number" id="tempDatalogger" placeholder="Ej: 2"
+                                        class="input-field w-full rounded-xl px-4 py-3 text-sm pr-10">
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium">&deg;C</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="miRolAsignado" class="block text-xs text-slate-400 mb-2 font-medium">Tu Rol en esta Operacion</label>
+                                <select id="miRolAsignado" class="input-field w-full rounded-xl px-4 py-3 text-sm cursor-pointer">
+                                    <option value="2">&#x1F4E6; Soy Packing (Rol 2)</option>
+                                    <option value="3">&#x1F69B; Soy Operador Logistico (Rol 3)</option>
+                                </select>
+                            </div>
+                            <button onclick="transferirCustodia()" id="btnCustodia"
+                                class="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2">
+                                <i data-lucide="send" style="width:15px;height:15px;"></i>
+                                Registrar Temperatura y Transferir
+                            </button>
+                            <p class="res-output" id="resCustodia"></p>
+                        </div>
+                    </div>
+
+                    <!-- Cold chain reference -->
+                    <div class="glass-deep rounded-2xl p-5 border border-emerald-500/10">
+                        <h3 class="text-sm font-semibold text-emerald-400 mb-5 flex items-center gap-2">
+                            <i data-lucide="snowflake" style="width:14px;height:14px;"></i>
+                            Protocolo de Cadena de Frio
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="check-circle-2" class="text-emerald-400" style="width:13px;height:13px;"></i>
+                                    <span class="text-xs text-slate-300 font-medium">Rango Optimo (Arandanos)</span>
+                                </div>
+                                <span class="text-sm font-bold text-emerald-400">0&deg;C &ndash; 4&deg;C</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3.5 rounded-xl bg-red-500/5 border border-red-500/15">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="x-circle" class="text-red-400" style="width:13px;height:13px;"></i>
+                                    <span class="text-xs text-slate-300 font-medium">Zona de Slashing</span>
+                                </div>
+                                <span class="text-sm font-bold text-red-400">&lt;0&deg;C o &gt;4&deg;C</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/15">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="coins" class="text-amber-400" style="width:13px;height:13px;"></i>
+                                    <span class="text-xs text-slate-300 font-medium">Penalizacion Automatica</span>
+                                </div>
+                                <span class="text-sm font-bold text-amber-400">&minus;10% Staking</span>
+                            </div>
+                            <div class="mt-2 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                                <p class="text-xs text-slate-500 leading-relaxed">
+                                    La validacion se ejecuta <strong class="text-slate-400">on-chain</strong> en el mismo bloque.
+                                    No hay intermediarios. El slashing es irreversible.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================
+             PANEL 4 — OPERADOR LOGISTICO
+        ==================================================== -->
+        <section id="panelOperador" class="panel fade-in" role="tabpanel" aria-labelledby="tab-Operador">
+            <div class="glass rounded-2xl p-6 sm:p-8">
+
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                        <i data-lucide="truck" class="text-violet-400" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Panel de Logistica</h2>
+                        <p class="text-xs text-slate-500">Operador Logistico &middot; Rol 3 &middot; Validacion de transporte y entrega en puerto</p>
+                    </div>
+                </div>
+
+                <!-- Governance alert -->
+                <div class="alert-slashing rounded-2xl p-4 sm:p-5 mb-6 flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i data-lucide="alert-triangle" class="text-amber-400" style="width:18px;height:18px;"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-amber-400 mb-1">&#x26A0;&#xFE0F; Alerta de Gobernanza: Slashing en Transito Activo</p>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Las mismas reglas aplican durante el transporte. Temperatura fuera de
+                            <strong class="text-amber-300">0&deg;C &ndash; 4&deg;C</strong> ejecutara slashing automatico
+                            y marcara el lote como <strong class="text-red-400">Rechazado</strong>. Irreversible on-chain.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+
+                    <!-- Logistics form -->
+                    <div class="glass-deep rounded-2xl p-5 border border-violet-500/10">
+                        <h3 class="text-sm font-semibold text-violet-400 mb-5 flex items-center gap-2">
+                            <i data-lucide="map-pin" style="width:14px;height:14px;"></i>
+                            Validacion Logistica de Puerto
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="idLoteOperador" class="block text-xs text-slate-400 mb-2 font-medium">ID del Lote en Transito</label>
+                                <input type="text" id="idLoteOperador" placeholder="Ej: L-2026-0417"
+                                    class="input-field w-full rounded-xl px-4 py-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="tempOperador" class="block text-xs text-slate-400 mb-2 font-medium">Temperatura Registrada en Puerto (&deg;C)</label>
+                                <div class="relative">
+                                    <input type="number" id="tempOperador" placeholder="Ej: 3"
+                                        class="input-field w-full rounded-xl px-4 py-3 text-sm pr-10">
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium">&deg;C</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="rolOperadorHidden" value="3">
+                            <button onclick="transferirCustodiaOperador()" id="btnOperador"
+                                class="btn-purple w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2">
+                                <i data-lucide="ship" style="width:15px;height:15px;"></i>
+                                Validar Entrega en Puerto
+                            </button>
+                            <p class="res-output" id="resOperador"></p>
+                        </div>
+                    </div>
+
+                    <!-- Supply chain flow -->
+                    <div class="glass-deep rounded-2xl p-5 border border-violet-500/10">
+                        <h3 class="text-sm font-semibold text-violet-400 mb-5 flex items-center gap-2">
+                            <i data-lucide="route" style="width:14px;height:14px;"></i>
+                            Cadena de Custodia del Consorcio
+                        </h3>
+                        <div class="relative pl-5">
+                            <div class="absolute left-[18px] top-5 bottom-5 w-px timeline-connector opacity-40 rounded-full"></div>
+                            <div class="space-y-5">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-7 h-7 rounded-full bg-emerald-500/20 border-2 border-emerald-500/50 flex items-center justify-center flex-shrink-0 z-10">
+                                        <i data-lucide="sprout" class="text-emerald-400" style="width:12px;height:12px;"></i>
+                                    </div>
+                                    <div class="pt-0.5">
+                                        <p class="text-xs font-semibold text-emerald-400">Fundo &mdash; Origen</p>
+                                        <p class="text-xs text-slate-500 mt-0.5">Registro de cosecha + genesis del lote on-chain</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-7 h-7 rounded-full bg-cyan-500/20 border-2 border-cyan-500/50 flex items-center justify-center flex-shrink-0 z-10">
+                                        <i data-lucide="package" class="text-cyan-400" style="width:12px;height:12px;"></i>
+                                    </div>
+                                    <div class="pt-0.5">
+                                        <p class="text-xs font-semibold text-cyan-400">Packing &mdash; Empaque</p>
+                                        <p class="text-xs text-slate-500 mt-0.5">Recepcion, empaque y validacion termica del lote</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-7 h-7 rounded-full bg-violet-500/30 border-2 border-violet-400/70 flex items-center justify-center flex-shrink-0 z-10" style="box-shadow:0 0 12px rgba(139,92,246,0.4)">
+                                        <i data-lucide="truck" class="text-violet-300" style="width:12px;height:12px;"></i>
+                                    </div>
+                                    <div class="pt-0.5">
+                                        <p class="text-xs font-semibold text-violet-300 flex items-center gap-1.5 flex-wrap">
+                                            Operador Logistico
+                                            <span class="text-[9px] bg-violet-500/20 border border-violet-500/30 text-violet-400 rounded px-1.5 py-0.5 font-medium">&larr; Estas aqui</span>
+                                        </p>
+                                        <p class="text-xs text-slate-500 mt-0.5">Transporte refrigerado y entrega final en puerto</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 opacity-40">
+                                    <div class="w-7 h-7 rounded-full bg-slate-700/50 border-2 border-slate-600/50 flex items-center justify-center flex-shrink-0 z-10">
+                                        <i data-lucide="building-2" class="text-slate-400" style="width:12px;height:12px;"></i>
+                                    </div>
+                                    <div class="pt-0.5">
+                                        <p class="text-xs font-semibold text-slate-400">Comprador Internacional</p>
+                                        <p class="text-xs text-slate-600 mt-0.5">Auditoria publica &rarr; Liberacion de pago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================
+             PANEL 5 — AUDITORIA PUBLICA (COMPRADOR)
+        ==================================================== -->
+        <section id="panelComprador" class="panel fade-in" role="tabpanel" aria-labelledby="tab-Comprador">
+            <div class="glass rounded-2xl p-6 sm:p-8">
+
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                        <i data-lucide="search" class="text-cyan-400" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Portal de Auditoria Publica</h2>
+                        <p class="text-xs text-slate-500">Lectura publica &middot; Sin wallet &middot; Sin gas &middot; Sin permisos &middot; Sin firma</p>
+                    </div>
+                    <div class="ml-auto hidden sm:flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full px-3 py-1">
+                        <i data-lucide="globe" class="text-cyan-400" style="width:10px;height:10px;"></i>
+                        <span class="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider">Acceso Publico</span>
+                    </div>
+                </div>
+
+                <!-- Search bar -->
+                <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                    <div class="relative flex-1">
+                        <i data-lucide="hash" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" style="width:14px;height:14px;"></i>
+                        <input type="text" id="idLoteConsulta" placeholder="Ingresa el ID del Lote (Ej: L-2026-0417)"
+                            class="input-field w-full rounded-xl pl-10 pr-4 py-3.5 text-sm">
+                    </div>
+                    <button onclick="consultarLote()" id="btnConsultar"
+                        class="btn-primary px-7 py-3.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 whitespace-nowrap">
+                        <i data-lucide="scan-search" style="width:15px;height:15px;"></i>
+                        Auditar Lote
+                    </button>
+                </div>
+
+                <!-- Info banner -->
+                <div class="glass-deep rounded-xl p-4 mb-6 border border-cyan-500/10 flex items-start gap-3">
+                    <i data-lucide="info" class="text-cyan-400 flex-shrink-0 mt-0.5" style="width:14px;height:14px;"></i>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Este portal consulta directamente la blockchain de Sepolia mediante
+                        <strong class="text-cyan-400">JsonRpcProvider publico</strong> (publicnode.com).
+                        No requiere MetaMask, wallet, fondos ni permisos.
+                        Disenado para que compradores internacionales verifiquen el estado antes de liberar pagos.
+                    </p>
+                </div>
+
+                <!-- Timeline result area (rendered by app.js) -->
+                <div id="resConsulta"></div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ====================================================
+         FOOTER
+    ==================================================== -->
+    <footer class="relative z-10 border-t border-white/[0.05] mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="package-2" class="text-emerald-400" style="width:14px;height:14px;"></i>
+                    <span class="text-sm gradient-text font-semibold">PoPacket Engine B2B</span>
+                    <span class="text-slate-700">&middot;</span>
+                    <span class="text-xs text-slate-600">Trazabilidad On-Chain Agroexportadora</span>
+                </div>
+                <div class="flex items-center gap-3 text-xs text-slate-600">
+                    <span>Contrato:
+                        <a href="https://sepolia.etherscan.io/address/0xDAcB6b9899eEe47e3A7F83C9CeE1f87D4de60487"
+                           target="_blank" rel="noopener noreferrer"
+                           class="text-cyan-600 hover:text-cyan-400 transition-colors font-mono">
+                            0xDAcB&hellip;0487
+                        </a>
+                    </span>
+                    <span>&middot;</span>
+                    <span>Solidity ^0.8.19</span>
+                    <span>&middot;</span>
+                    <span>Ethers.js v6</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ====================================================
+         SCRIPTS
+    ==================================================== -->
+
+    <!-- Ethers.js v6 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.umd.min.js"></script>
+
+    <!-- UI utilities: tab switching + theme toggle -->
+    <script>
+        /**
+         * Switch active tab and panel.
+         * @param {string} name - Panel suffix: Admin | Fundo | Packing | Operador | Comprador
+         */
+        function switchTab(name) {
+            document.querySelectorAll('.panel').forEach(function(p) {
+                p.classList.remove('active', 'fade-in');
+            });
+            document.querySelectorAll('.tab-btn').forEach(function(t) {
+                t.classList.remove('tab-active');
+                t.setAttribute('aria-selected', 'false');
+            });
+
+            var panel = document.getElementById('panel' + name);
+            if (panel) {
+                panel.classList.add('active');
+                void panel.offsetWidth; // reflow for animation
+                panel.classList.add('fade-in');
+            }
+            var tab = document.getElementById('tab-' + name);
+            if (tab) {
+                tab.classList.add('tab-active');
+                tab.setAttribute('aria-selected', 'true');
+            }
+        }
+
+        /**
+         * Toggle between light and dark theme.
+         * Persists preference in localStorage.
+         */
+        function toggleTheme() {
+            var html = document.documentElement;
+            var isDark = html.classList.toggle('dark');
+            localStorage.setItem('ppk-theme', isDark ? 'dark' : 'light');
+            // Re-init icons so sun/moon visibility updates immediately
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        // Initialize Lucide icons after DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <!-- App Web3 logic -->
     <script src="app.js"></script>
+
 </body>
 </html>

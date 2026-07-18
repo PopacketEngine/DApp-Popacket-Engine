@@ -1,0 +1,28 @@
+name: Deploy DApp to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main  
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'deploy:')
+    
+    steps:
+      - name: Conectar por SSH y Desplegar
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_HOST }}         # La IP de tu droplet
+          username: ${{ secrets.DO_USERNAME }} # root
+          password: ${{ secrets.DO_PASSWORD }}       # Tu clave privada SSH
+          script: |
+            cd ~/proyectos/DApp-Popacket-Engine
+            git pull origin main
+            
+            # Si tu contenedor nginx lee los archivos directamente de la carpeta:
+            # No necesitas hacer nada más, los cambios se reflejan al instante.
+            
+            # Si necesitas reiniciar el contenedor para que tome cambios:
+            docker restart popacket-dapp

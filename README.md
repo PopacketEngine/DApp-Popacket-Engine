@@ -11,7 +11,7 @@ Plataforma descentralizada de trazabilidad para agroexportación (enfocada en Ar
 * **Dirección del Contrato Inteligente:** [`0xDAcB6b9899eEe47e3A7F83C9CeE1f87D4de60487`](https://sepolia.etherscan.io/address/0xDAcB6b9899eEe47e3A7F83C9CeE1f87D4de60487)
 * **Versión de Node.js Utilizada:** `22.19.0`
 * **URL de la DApp (Producción):** [popacket-engine.automasilabo.space](https://popacket-engine.automasilabo.space)
-
+* **URL del EtherScan del contrato:** [sepolia.etherscan.io/address/0xDAcB6b9899eEe47e3A7F83C9CeE1f87D4de60487](https://sepolia.etherscan.io/address/0xDAcB6b9899eEe47e3A7F83C9CeE1f87D4de60487)
 ---
 
 ## 🛠️ Arquitectura del Sistema

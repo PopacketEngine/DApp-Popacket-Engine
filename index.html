@@ -41,6 +41,16 @@
         .dark .input-field { background: #0f172a; border: 1px solid #334155; color: #e2e8f0; }
         .input-field:focus { outline: none; border-color: #64748b; box-shadow: 0 0 0 3px rgba(100,116,139,0.15); }
         .input-field::placeholder { color: #94a3b8; }
+        .input-field.input-error { border-color: #dc2626; }
+        .input-field.input-error:focus { box-shadow: 0 0 0 3px rgba(220,38,38,0.15); }
+
+        @keyframes shake {
+            10%, 90% { transform: translateX(-1px); }
+            20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
+        }
+        .shake { animation: shake 0.4s ease; }
 
         .btn-primary { background: #2563eb; transition: background-color 0.15s ease; }
         .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
@@ -85,16 +95,16 @@
                 <h1 class="text-base font-semibold">PoPacket Engine <span class="text-slate-400 dark:text-slate-500 font-normal">B2B</span></h1>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Acceso a la demo del consorcio</p>
             </div>
-            <form id="loginForm" onsubmit="iniciarSesion(event)" class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3">
+            <form id="loginForm" onsubmit="iniciarSesion(event)" novalidate class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3">
                 <div>
                     <label for="loginUsuario" class="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Usuario</label>
-                    <input type="text" id="loginUsuario" autocomplete="username" placeholder="usuario@popacket.com" class="input-field w-full rounded-lg px-3 py-2.5 text-sm">
+                    <input type="text" id="loginUsuario" autocomplete="username" placeholder="usuario@popacket.com" required class="input-field w-full rounded-lg px-3 py-2.5 text-sm">
                 </div>
                 <div>
                     <label for="loginClave" class="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Contraseña</label>
-                    <input type="password" id="loginClave" autocomplete="current-password" class="input-field w-full rounded-lg px-3 py-2.5 text-sm">
+                    <input type="password" id="loginClave" autocomplete="current-password" required class="input-field w-full rounded-lg px-3 py-2.5 text-sm">
                 </div>
-                <p class="res-output error" id="loginError"></p>
+                <p class="res-output error" id="loginError" role="alert" aria-live="polite"></p>
                 <button type="submit" class="btn-primary w-full py-2.5 rounded-lg text-sm font-medium text-white">Ingresar</button>
             </form>
             <p class="text-[11px] text-slate-400 dark:text-slate-600 text-center mt-4">

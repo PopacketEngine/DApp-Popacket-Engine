@@ -41,19 +41,54 @@ function verificarSesion() {
     }
 }
 
+function limpiarErrorLogin() {
+    var errorEl = document.getElementById("loginError");
+    var campoUsuario = document.getElementById("loginUsuario");
+    var campoClave = document.getElementById("loginClave");
+    if (errorEl) errorEl.textContent = "";
+    if (campoUsuario) campoUsuario.classList.remove("input-error");
+    if (campoClave) campoClave.classList.remove("input-error");
+}
+
 function iniciarSesion(event) {
     event.preventDefault();
-    var usuario = document.getElementById("loginUsuario").value.trim().toLowerCase();
-    var clave = document.getElementById("loginClave").value;
+    var campoUsuario = document.getElementById("loginUsuario");
+    var campoClave = document.getElementById("loginClave");
     var errorEl = document.getElementById("loginError");
+    var form = document.getElementById("loginForm");
+
+    var usuario = campoUsuario.value.trim().toLowerCase();
+    var clave = campoClave.value;
+
+    if (!usuario || !clave) {
+        if (errorEl) errorEl.textContent = "Ingresa usuario y contraseña.";
+        campoUsuario.classList.toggle("input-error", !usuario);
+        campoClave.classList.toggle("input-error", !clave);
+        (!usuario ? campoUsuario : campoClave).focus();
+        return;
+    }
 
     if (usuario === CREDENCIALES_DEMO.usuario && clave === CREDENCIALES_DEMO.clave) {
         sessionStorage.setItem(AUTH_KEY, "1");
-        if (errorEl) errorEl.textContent = "";
+        limpiarErrorLogin();
         mostrarApp();
-    } else if (errorEl) {
-        errorEl.textContent = "Usuario o contraseña incorrectos.";
+        return;
     }
+
+    if (errorEl) errorEl.textContent = "Usuario o contraseña incorrectos.";
+    campoUsuario.classList.add("input-error");
+    campoClave.classList.add("input-error");
+    campoClave.value = "";
+    campoClave.focus();
+
+    if (form) {
+        form.classList.remove("shake");
+        void form.offsetWidth; // reinicia la animacion si el usuario falla dos veces seguidas
+        form.classList.add("shake");
+    }
+
+    campoUsuario.addEventListener("input", limpiarErrorLogin, { once: true });
+    campoClave.addEventListener("input", limpiarErrorLogin, { once: true });
 }
 
 function cerrarSesion() {

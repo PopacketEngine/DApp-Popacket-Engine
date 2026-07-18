@@ -12,6 +12,10 @@ Plataforma descentralizada de trazabilidad para agroexportación (enfocada en Ar
 * **Versión de Node.js Utilizada:** `22.19.0`
 * **URL de la DApp (Producción):** [popacket-engine.automasilabo.space](https://popacket-engine.automasilabo.space)
 * **URL del EtherScan del contrato:** [sepolia.etherscan.io/address/0xDAcB6b9899eEe47e3A7F83C9CeE1f87D4de60487](https://sepolia.etherscan.io/address/0xDAcB6b9899eEe47e3A7F83C9CeE1f87D4de60487)
+
+> [!IMPORTANT]
+> El dominio de producción está detrás de **Cloudflare**, que cachea `app.js` y `assets/logo.svg` hasta 4 horas (`Cache-Control: max-age=14400`) aunque `index.html` se sirva siempre fresco (`cf-cache-status: DYNAMIC`). Si cambias `app.js` o el logo, **sube el número de versión en `index.html`** (`app.js?v=4` → `?v=5`, y lo mismo en las referencias a `assets/logo.svg?v=4`) para que Cloudflare no siga sirviendo la copia vieja. Si no lo haces, el sitio puede quedar con HTML nuevo pero JS viejo (funciones referenciadas desde el HTML que no existen todavía en el `app.js` cacheado) hasta que expire el caché.
+
 ---
 
 ## 🛠️ Arquitectura del Sistema
